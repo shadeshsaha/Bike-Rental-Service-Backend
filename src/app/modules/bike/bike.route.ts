@@ -13,4 +13,8 @@ route.post(
 
 route.get('/', bikeControllers.getAllBikes);
 
+route.put('/:id', auth(UserRole.admin), bikeControllers.updateBike);
+
+route.delete('/:id', auth(UserRole.admin), bikeControllers.deleteBike);
+
 export const bikeRouter = route;
