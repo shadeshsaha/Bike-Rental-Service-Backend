@@ -1,7 +1,7 @@
 import status from 'http-status';
 
 import catchAsync from '../../utils/catchAsync';
-import successResponse from '../../utils/successResponse';
+import successResponse from '../../utils/sendResponse';
 import { rentalsServices } from './rentals.services';
 
 const createRental = catchAsync(async (req, res) => {

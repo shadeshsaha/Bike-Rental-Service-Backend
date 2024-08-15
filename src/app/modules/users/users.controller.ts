@@ -1,6 +1,6 @@
 import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync';
-import successResponse from '../../utils/successResponse';
+import successResponse from '../../utils/sendResponse';
 import { userServices } from './users.service';
 
 const retrieveUser = catchAsync(async (req, res) => {

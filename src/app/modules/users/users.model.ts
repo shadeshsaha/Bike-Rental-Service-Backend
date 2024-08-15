@@ -1,32 +1,37 @@
-import { model, Schema } from 'mongoose';
-import { TUser } from './users.interface';
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 import bcrypt from 'bcrypt';
-import config from '../../config';
-const userSchema = new Schema<TUser>(
+import httpStatus from 'http-status';
+import { Schema, UpdateQuery, model } from 'mongoose';
+import { AppError } from '../../errors/AppError';
+import { IUser } from './users.interface';
+
+const userSchema = new Schema<IUser>(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, 'User name is required'],
+      unique: true,
     },
     email: {
       type: String,
-      required: true,
+      required: [true, 'User email is required'],
       unique: true,
     },
     password: {
       type: String,
-      required: true,
-    },
-    address: {
-      type: String,
+      required: [true, 'User password is required'],
+      select: false,
     },
     phone: {
       type: String,
-      required: true,
+      required: [true, 'Phone number is required'],
+    },
+    address: {
+      type: String,
+      required: [true, 'Address is required'],
     },
     role: {
       type: String,
-      enum: ['admin', 'user'],
       default: 'user',
     },
   },
@@ -36,9 +41,23 @@ const userSchema = new Schema<TUser>(
 );
 
 userSchema.pre('save', async function (next) {
-  // eslint-disable-next-line @typescript-eslint/no-this-alias
-  const user = this;
-  user.password = await bcrypt.hash(user?.password, Number(config.salt));
+  this.password = await bcrypt.hash(this.password, 12);
   next();
 });
-export const userModel = model<TUser>('User', userSchema);
+
+userSchema.pre('findOneAndUpdate', async function (next) {
+  const value = this.getUpdate() as UpdateQuery<any>;
+
+  if (value) {
+    if (value.password) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        'You can not update the password',
+      );
+    }
+  }
+
+  next();
+});
+
+export const User = model<IUser>('User', userSchema);

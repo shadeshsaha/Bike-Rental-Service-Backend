@@ -1,6 +1,6 @@
 import status from 'http-status';
 import catchAsync from '../../utils/catchAsync';
-import successResponse from '../../utils/successResponse';
+import successResponse from '../../utils/sendResponse';
 import { bikeServices } from './bike.services';
 
 const createBike = catchAsync(async (req, res) => {

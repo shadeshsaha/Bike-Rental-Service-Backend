@@ -3,7 +3,7 @@ import { authServices } from './auth.services';
 
 import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync';
-import successResponse from '../../utils/successResponse';
+import successResponse from '../../utils/sendResponse';
 
 const signUpUser = catchAsync(async (req, res) => {
   const body = req.body;

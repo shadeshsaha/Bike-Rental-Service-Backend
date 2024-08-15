@@ -1,14 +1,15 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { NextFunction, Request, Response } from 'express';
-import status from 'http-status';
-export const notfoundError = (
-  req: Request,
-  res: Response,
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-  next: NextFunction,
-) => {
-  return res.status(404).json({
+import httpStatus from 'http-status';
+
+const notFoundError = (req: Request, res: Response, next: NextFunction) => {
+  return res.status(httpStatus.NOT_FOUND).json({
     success: false,
-    statusCode: status.NOT_FOUND,
-    message: 'Not Found!',
+    statusCode: 404,
+    message: 'Not Found',
   });
 };
+
+export default notFoundError;
