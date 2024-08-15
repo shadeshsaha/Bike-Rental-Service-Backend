@@ -1,9 +1,9 @@
 import { JwtPayload } from 'jsonwebtoken';
 import { AppError } from '../../errors/AppError';
 // import { TUser } from './users.interface';
-import { userModel } from './users.model';
 import status from 'http-status';
 import { TUser } from './users.interface';
+import { userModel } from './users.model';
 
 const retrieveAllUsers = async (payload: JwtPayload) => {
   const result = await userModel

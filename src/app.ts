@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import cors from 'cors';
 import express, { Application, Request, Response } from 'express';
-import { globalErrorHandler } from './app/middleware/globalError';
+import { globalError } from './app/middleware/globalError';
 import { notfoundError } from './app/middleware/notFoundError';
 import router from './app/router';
 const app: Application = express();
@@ -19,7 +19,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // global error
-app.use(globalErrorHandler);
+app.use(globalError);
 
 // notfound route handler
 app.use(notfoundError);

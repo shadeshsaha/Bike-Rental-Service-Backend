@@ -1,24 +1,24 @@
-import status from 'http-status';
-import { TErrorMessages, TGenericResponse } from '../interface/error';
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+import httpStatus from 'http-status';
+import { TErrorMessages } from '../utils';
 
-export const duplicateErrorHandler = (err: {
-  message: string;
-}): TGenericResponse => {
+const handleDuplicateError = (err: any) => {
+  const message = 'Duplicate Error';
+  const statusCode = httpStatus.CONFLICT;
   const match = err.message.match(/"([^"]*)"/);
-
   const extractedMessage = match && match[1];
-
   const errorMessages: TErrorMessages = [
     {
       path: '',
-      message: `${extractedMessage} is already exist.`,
+      message: `${extractedMessage} is already exist`,
     },
   ];
-  const statusCode = status.BAD_REQUEST;
 
   return {
+    message,
     statusCode,
-    message: 'Invalid Id Error',
     errorMessages,
   };
 };
+
+export default handleDuplicateError;

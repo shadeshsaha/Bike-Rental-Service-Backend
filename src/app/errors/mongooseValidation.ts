@@ -1,23 +1,23 @@
-import status from 'http-status';
+import httpStatus from 'http-status';
 import mongoose from 'mongoose';
-import { TErrorMessages, TGenericResponse } from '../interface/error';
+import { TErrorMessages } from '../utils';
 
-export const mongooseValidationError = (
-  err: mongoose.Error.ValidationError,
-): TGenericResponse => {
-  const errorMessages: TErrorMessages = Object.values(err?.errors).map(
-    (value: mongoose.Error.ValidatorError | mongoose.Error.CastError) => {
-      return {
-        path: value?.path,
-        message: value?.message,
-      };
-    },
-  );
-  const statusCode = status.BAD_REQUEST;
+const mongooseValiDationError = (err: mongoose.Error.ValidationError) => {
+  const statusCode = httpStatus.BAD_REQUEST;
+  const message = err.name;
+  const propertiesName = Object.keys(err.errors);
+  const errorMessages: TErrorMessages = propertiesName.map((field) => {
+    return {
+      path: field,
+      message: `${field} is required`,
+    };
+  });
 
   return {
     statusCode,
-    message: 'Mongoose validation error',
+    message,
     errorMessages,
   };
 };
+
+export default mongooseValiDationError;

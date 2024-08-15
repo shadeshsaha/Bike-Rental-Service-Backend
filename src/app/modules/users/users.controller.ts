@@ -1,12 +1,12 @@
 import httpStatus from 'http-status';
-import { catchAsync } from '../../utils/catchAsync';
+import catchAsync from '../../utils/catchAsync';
 import successResponse from '../../utils/successResponse';
 import { userServices } from './users.service';
 
 const retrieveUser = catchAsync(async (req, res) => {
-  const user = req.user;
-  const data = await userServices.retrieveAllUsers(user?.email);
+  // const user = req.user;
 
+  const data = await userServices.retrieveAllUsers(req.body);
   successResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -19,7 +19,6 @@ const updateSingleUser = catchAsync(async (req, res) => {
   const user = req.user;
   const body = req.body;
   const data = await userServices.updateProfile(user?.email, body);
-
   successResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

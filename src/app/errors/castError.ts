@@ -1,19 +1,22 @@
-import status from 'http-status';
+import httpStatus from 'http-status';
 import mongoose from 'mongoose';
-import { TErrorMessages, TGenericResponse } from '../interface/error';
+import { TErrorMessages } from '../interface/error';
 
-export const castErrorHandler = (
-  err: mongoose.Error.CastError,
-): TGenericResponse => {
+const handleCastError = (err: mongoose.Error.CastError) => {
+  const statusCode = httpStatus.BAD_REQUEST;
+  const message = err.message;
   const errorMessages: TErrorMessages = [
-    { path: err.path, message: err.message },
+    {
+      path: err.path,
+      message: err.message,
+    },
   ];
-
-  const statusCode = status.BAD_REQUEST;
 
   return {
     statusCode,
-    message: 'Mongoose cast error',
+    message,
     errorMessages,
   };
 };
+
+export default handleCastError;

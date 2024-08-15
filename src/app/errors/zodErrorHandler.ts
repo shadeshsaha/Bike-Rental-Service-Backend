@@ -1,20 +1,21 @@
-import status from 'http-status';
-import { ZodError, ZodIssue } from 'zod';
-import { TErrorMessages, TGenericResponse } from '../interface/error';
+import { ZodError } from 'zod';
+import { TErrorMessages } from '../utils';
 
-export const zodErrorHandler = (err: ZodError): TGenericResponse => {
-  const errorMessages: TErrorMessages = err.issues?.map((issue: ZodIssue) => {
+const handleZodError = (err: ZodError) => {
+  const statusCode = 400;
+  const message = 'Validation Error';
+  const errorMessages: TErrorMessages = err.issues.map((error) => {
     return {
-      path: issue.path[issue.path.length - 1],
-      message: issue.message,
+      path: error.path[error.path.length - 1] as string,
+      message: error.message,
     };
   });
 
-  const statusCode = status.BAD_REQUEST;
-
   return {
     statusCode,
-    message: 'Zod validation error',
+    message,
     errorMessages,
   };
 };
+
+export default handleZodError;

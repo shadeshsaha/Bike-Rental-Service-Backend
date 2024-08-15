@@ -1,5 +1,5 @@
 import express from 'express';
-import { authMiddleware } from '../../utils/authMiddleware';
+import { auth } from '../../utils/authMiddleware';
 import { validationRequest } from '../../utils/validateRequest';
 import { UserRole } from '../users/users.constants';
 import { bikeControllers } from './bike.controller';
@@ -12,7 +12,7 @@ const route = express.Router();
 
 route.post(
   '/',
-  authMiddleware(UserRole.admin),
+  auth(UserRole.admin),
   validationRequest(createBikeValidationSchema),
   bikeControllers.createBike,
 );
@@ -21,15 +21,11 @@ route.get('/', bikeControllers.getAllBikes);
 
 route.put(
   '/:id',
-  authMiddleware(UserRole.admin),
+  auth(UserRole.admin),
   validationRequest(updateBikeValidationSchema),
   bikeControllers.updateBike,
 );
 
-route.delete(
-  '/:id',
-  authMiddleware(UserRole.admin),
-  bikeControllers.deleteBike,
-);
+route.delete('/:id', auth(UserRole.admin), bikeControllers.deleteBike);
 
 export const bikeRouter = route;

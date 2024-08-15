@@ -3,9 +3,9 @@ import status from 'http-status';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../config';
 import { AppError } from '../errors/AppError';
-import { catchAsync } from './catchAsync';
+import catchAsync from './catchAsync';
 
-export const authMiddleware = (...RequireRoles: (string | undefined)[]) => {
+export const auth = (...RequireRoles: (string | undefined)[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers.authorization?.split(' ')[1];
 
@@ -16,7 +16,7 @@ export const authMiddleware = (...RequireRoles: (string | undefined)[]) => {
 
     // check is the token verify?
 
-    jwt.verify(token, config.jwt_secret, (err, decoded) => {
+    jwt.verify(token, config.JWT_SECRET, (err, decoded) => {
       if (err) {
         throw new AppError(
           status.UNAUTHORIZED,

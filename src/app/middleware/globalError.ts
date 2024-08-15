@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import config from '../config';
 import { AppError } from '../errors/AppError';
@@ -9,13 +8,16 @@ import { mongooseValidationError } from '../errors/mongooseValidation';
 import { zodErrorHandler } from '../errors/zodErrorHandler';
 import { TErrorMessages } from '../interface/error';
 
-export const globalErrorHandler = (
+export const globalError = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   err: any,
   req: Request,
   res: Response,
-  // next: NextFunction,
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+  next: NextFunction,
 ) => {
   let statusCode = 500;
+
   let message = err.message || 'Something went wrong!';
 
   let errorMessages: TErrorMessages = [
@@ -42,7 +44,7 @@ export const globalErrorHandler = (
     message = simplified.message;
     errorMessages = simplified.errorMessages;
   } else if (err.code === 11000) {
-    // Mongoose duplicate error handler
+    // mongoose duplicate error handler
     const simplifyMongooseError = duplicateErrorHandler(err);
     statusCode = simplifyMongooseError?.statusCode;
     message = simplifyMongooseError?.message;

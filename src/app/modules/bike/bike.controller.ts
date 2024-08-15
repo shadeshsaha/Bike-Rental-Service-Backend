@@ -1,5 +1,5 @@
 import status from 'http-status';
-import { catchAsync } from '../../utils/catchAsync';
+import catchAsync from '../../utils/catchAsync';
 import successResponse from '../../utils/successResponse';
 import { bikeServices } from './bike.services';
 

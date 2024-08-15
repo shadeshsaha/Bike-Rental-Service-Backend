@@ -1,11 +1,11 @@
 import bcrypt from 'bcrypt';
-import { userModel } from './../users/users.model';
-import { TUser } from '../users/users.interface';
-import { TUserLogin } from './auth.interface';
-import { AppError } from '../../errors/AppError';
-import jwt from 'jsonwebtoken';
 import status from 'http-status';
+import jwt from 'jsonwebtoken';
 import config from '../../config';
+import { AppError } from '../../errors/AppError';
+import { TUser } from '../users/users.interface';
+import { userModel } from './../users/users.model';
+import { TUserLogin } from './auth.interface';
 
 const signUpUser = async (payload: TUser) => {
   const result = await userModel.create(payload);
@@ -33,8 +33,8 @@ const loginUser = async (payload: TUserLogin) => {
     role: userExist.role,
   };
 
-  const token = jwt.sign(tokenPayload, config.jwt_secret as string, {
-    expiresIn: config.expires_in,
+  const token = jwt.sign(tokenPayload, config.JWT_SECRET as string, {
+    expiresIn: config.EXPIRES_IN,
   });
 
   const user = await userModel

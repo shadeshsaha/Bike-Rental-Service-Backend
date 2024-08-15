@@ -1,5 +1,5 @@
 import express from 'express';
-import { authMiddleware } from '../../utils/authMiddleware';
+import { auth } from '../../utils/authMiddleware';
 import { validationRequest } from '../../utils/validateRequest';
 import { UserRole } from '../users/users.constants';
 import { rentalsController } from './rentals.controller';
@@ -19,10 +19,6 @@ route.get(
   rentalsController.getAllRentals,
 );
 
-route.put(
-  '/:id/return',
-  authMiddleware(UserRole.admin),
-  rentalsController.returnBike,
-);
+route.put('/:id/return', auth(UserRole.admin), rentalsController.returnBike);
 
 export const rentalsRoute = route;
