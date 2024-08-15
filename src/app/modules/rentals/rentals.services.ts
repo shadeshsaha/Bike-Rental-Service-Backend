@@ -8,12 +8,12 @@ import { TRentals } from './rentals.interface';
 import { rentals } from './rentals.model';
 
 const createRentals = async (email: JwtPayload, payload: TRentals) => {
-  console.log('email, payload', email, payload);
+  // console.log('email, payload', email, payload);
 
   const session = await startSession();
   // get specific user
   const user = await userModel.findOne({ email: email });
-  console.log('user: ', user);
+  // console.log('user: ', user);
 
   // if user not exist
   if (!user) {
@@ -53,7 +53,7 @@ const createRentals = async (email: JwtPayload, payload: TRentals) => {
     payload.userId = user?._id;
 
     const data = await rentals.create([payload], { session });
-    console.log('data:', data);
+    // console.log('data:', data);
 
     if (!data) {
       throw new AppError(status.BAD_REQUEST, 'Rental created failed!');
@@ -64,7 +64,7 @@ const createRentals = async (email: JwtPayload, payload: TRentals) => {
       { isAvailable: false },
       { new: true, runValidators: true, session },
     );
-    console.log('updateBike', updateBike);
+    // console.log('updateBike', updateBike);
 
     if (!updateBike) {
       throw new AppError(status.BAD_REQUEST, 'Bike update failed!');
@@ -81,11 +81,29 @@ const createRentals = async (email: JwtPayload, payload: TRentals) => {
   }
 };
 
-const returnBike = async (id: string) => {
+// * see my rental bike
+const myRentalsService = async (email: JwtPayload) => {
+  const user = await userModel.findOne({ email: email });
+  if (!user) {
+    throw new AppError(status.NOT_FOUND, 'No Data Found');
+  }
+
+  const data = await rentals
+    .find({ userId: user?._id })
+    .select({ createdAt: 0, updatedAt: 0 });
+  if (!data || data.length < 1) {
+    throw new AppError(status.NOT_FOUND, 'No Data Found');
+  }
+
+  return data;
+};
+
+// * return bike services (admin)
+const returnBike = async (bookingId: string) => {
   // find current rentals
-  const currentRentals = await rentals.findById(id);
+  const currentRentals = await rentals.findById(bookingId);
   const bikeId = currentRentals?.bikeId;
-  console.log('currentRentals, bikeId ', currentRentals, bikeId);
+  // console.log('currentRentals, bikeId ', currentRentals, bikeId);
 
   if (!currentRentals) {
     throw new AppError(status.NOT_FOUND, 'No Data Found');
@@ -93,7 +111,7 @@ const returnBike = async (id: string) => {
 
   //   find bike by id
   const rentalsBike = await Bike.findById(bikeId);
-  console.log('rentalBike', rentalsBike);
+  // console.log('rentalBike', rentalsBike);
 
   if (!rentalsBike) {
     throw new AppError(status.NOT_FOUND, 'No Data Found');
@@ -119,7 +137,7 @@ const returnBike = async (id: string) => {
     session.startTransaction();
     const updateRental = await rentals
       .findByIdAndUpdate(
-        id,
+        bookingId,
         { returnTime, totalCost, isReturned: true },
         { new: true, runValidators: true, session },
       )
@@ -153,19 +171,4 @@ const returnBike = async (id: string) => {
   }
 };
 
-const retrieveRentals = async (email: JwtPayload) => {
-  const user = await userModel.findOne({ email: email });
-  if (!user) {
-    throw new AppError(status.NOT_FOUND, 'No Data Found');
-  }
-
-  const data = await rentals
-    .find({ userId: user?._id })
-    .select({ createdAt: 0, updatedAt: 0 });
-  if (!data || data.length < 1) {
-    throw new AppError(status.NOT_FOUND, 'No Data Found');
-  }
-
-  return data;
-};
-export const rentalsServices = { createRentals, returnBike, retrieveRentals };
+export const rentalsServices = { createRentals, returnBike, myRentalsService };

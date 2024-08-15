@@ -1,5 +1,5 @@
 import express from 'express';
-import { auth } from '../../utils/authMiddleware';
+import { authMiddleware } from '../../utils/authMiddleware';
 import { validationRequest } from '../../utils/validateRequest';
 import { UserRole } from '../users/users.constants';
 import { rentalsController } from './rentals.controller';
@@ -8,17 +8,21 @@ const route = express.Router();
 
 route.post(
   '/',
-  auth(UserRole.admin, UserRole.user),
+  // authMiddleware(UserRole.admin, UserRole.user),
   validationRequest(createRentalsValidationSchema),
   rentalsController.createRental,
 );
 
 route.get(
   '/',
-  auth(UserRole.user, UserRole.admin),
+  // authMiddleware(UserRole.user, UserRole.admin),
   rentalsController.getAllRentals,
 );
 
-route.put('/:id/return', auth(UserRole.admin), rentalsController.returnBike);
+route.put(
+  '/:id/return',
+  authMiddleware(UserRole.admin),
+  rentalsController.returnBike,
+);
 
 export const rentalsRoute = route;

@@ -9,14 +9,13 @@ import { mongooseValidationError } from '../errors/mongooseValidation';
 import { zodErrorHandler } from '../errors/zodErrorHandler';
 import { TErrorMessages } from '../interface/error';
 
-export const globalError = (
+export const globalErrorHandler = (
   err: any,
   req: Request,
   res: Response,
   // next: NextFunction,
 ) => {
   let statusCode = 500;
-
   let message = err.message || 'Something went wrong!';
 
   let errorMessages: TErrorMessages = [

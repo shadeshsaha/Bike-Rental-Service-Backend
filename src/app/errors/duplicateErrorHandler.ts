@@ -1,5 +1,6 @@
-import { TErrorMessages, TGenericResponse } from '../interface/error';
 import status from 'http-status';
+import { TErrorMessages, TGenericResponse } from '../interface/error';
+
 export const duplicateErrorHandler = (err: {
   message: string;
 }): TGenericResponse => {

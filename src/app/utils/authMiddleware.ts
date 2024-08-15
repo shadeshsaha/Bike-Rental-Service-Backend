@@ -5,7 +5,7 @@ import config from '../config';
 import { AppError } from '../errors/AppError';
 import { catchAsync } from './catchAsync';
 
-export const auth = (...RequireRoles: (string | undefined)[]) => {
+export const authMiddleware = (...RequireRoles: (string | undefined)[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers.authorization?.split(' ')[1];
 

@@ -6,8 +6,8 @@ import { authServices } from './auth.services';
 
 const signUpUser = catchAsync(async (req, res) => {
   const body = req.body;
-
   const data = await authServices.signUpUser(body);
+
   successResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -18,7 +18,6 @@ const signUpUser = catchAsync(async (req, res) => {
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const body = req.body;
-
   const { token, data } = await authServices.loginUser(body);
 
   successResponse(res, {

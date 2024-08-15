@@ -1,6 +1,7 @@
+import status from 'http-status';
 import { ZodError, ZodIssue } from 'zod';
 import { TErrorMessages, TGenericResponse } from '../interface/error';
-import status from 'http-status';
+
 export const zodErrorHandler = (err: ZodError): TGenericResponse => {
   const errorMessages: TErrorMessages = err.issues?.map((issue: ZodIssue) => {
     return {

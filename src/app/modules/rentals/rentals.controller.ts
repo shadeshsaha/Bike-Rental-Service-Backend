@@ -7,7 +7,7 @@ const createRental = catchAsync(async (req, res) => {
   const body = req.body;
   const user = req.user;
   const data = await rentalsServices.createRentals(user?.email, body);
-  console.log('body, user, data', body, user, data);
+  // console.log('body, user, data', body, user, data);
 
   successResponse(res, {
     statusCode: status.OK,
@@ -19,8 +19,8 @@ const createRental = catchAsync(async (req, res) => {
 
 const getAllRentals = catchAsync(async (req, res) => {
   const user = req.user;
-  const data = await rentalsServices.retrieveRentals(user?.email);
-  console.log('user, data', user, data);
+  const data = await rentalsServices.myRentalsService(user?.email);
+  // console.log('user, data', user, data);
 
   successResponse(res, {
     statusCode: status.OK,
@@ -33,7 +33,7 @@ const getAllRentals = catchAsync(async (req, res) => {
 const returnBike = catchAsync(async (req, res) => {
   const { id } = req.params;
   const data = await rentalsServices.returnBike(id);
-  console.log('id, data', id, data);
+  // console.log('id, data', id, data);
 
   successResponse(res, {
     statusCode: status.OK,
