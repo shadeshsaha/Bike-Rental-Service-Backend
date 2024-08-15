@@ -1,12 +1,15 @@
 import express from 'express';
 import { auth } from '../../utils/authMiddleware';
+import { validationRequest } from '../../utils/validateRequest';
 import { UserRole } from '../users/users.constants';
 import { rentalsController } from './rentals.controller';
+import { createRentalsValidationSchema } from './rentals.validation';
 const route = express.Router();
 
 route.post(
   '/',
   auth(UserRole.admin, UserRole.user),
+  validationRequest(createRentalsValidationSchema),
   rentalsController.createRental,
 );
 
