@@ -1,174 +1,171 @@
-import status from 'http-status';
+import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
-import { startSession } from 'mongoose';
+import mongoose from 'mongoose';
 import { AppError } from '../../errors/AppError';
 import { Bike } from '../bike/bike.model';
-import { userModel } from '../users/users.model';
-import { TRentals } from './rentals.interface';
-import { rentals } from './rentals.model';
+import { User } from '../users/users.model';
+import { IBooking } from './rentals.interface';
+import { Booking } from './rentals.model';
 
-const createRentals = async (email: JwtPayload, payload: TRentals) => {
-  // console.log('email, payload', email, payload);
-
-  const session = await startSession();
-  // get specific user
-  const user = await userModel.findOne({ email: email });
-  // console.log('user: ', user);
-
-  // if user not exist
+const rentABikeService = async (
+  payload: JwtPayload,
+  bookingData: Partial<IBooking>,
+) => {
+  const { email } = payload;
+  // * find the logged in user
+  const user = await User.findOne({ email });
   if (!user) {
-    throw new AppError(
-      status.UNAUTHORIZED,
-      'You are unauthorized, Please sign up',
-    );
+    throw new AppError(httpStatus.FORBIDDEN, 'No user found');
   }
 
-  // check is startTime same to previous rentals startTime
-  const existingRentalBikes = await rentals.findOne({
-    startTime: payload.startTime,
-    userId: user?._id,
-  });
+  // * get the bikeId and startTime
+  const { bikeId, startTime } = bookingData;
 
-  // check the users rentals is not return
+  // * finding the bike by bikeId
+  const bike = await Bike.findById(bikeId);
+  // * if there is no bike then no bike found will send
+  if (!bike) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'No bike found');
+  }
+  // * check if the bike is Available or not
+  const isBikeAvailable = bike.isAvailable;
 
-  const existingRentalNotReturnYet = await rentals.findOne({
-    userId: user?._id,
-    isReturned: false,
-  });
-
-  //  if startTime same to previous rentals startTime.
-  // if users previous rentals is not return.
-  if (
-    (existingRentalBikes && existingRentalBikes?.isReturned == false) ||
-    existingRentalNotReturnYet
-  ) {
-    throw new AppError(
-      status.BAD_REQUEST,
-      "You are already renting a bike but you didn't return, Before renting a new bike you have to return your previous bike!",
-    );
+  if (!isBikeAvailable) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Bike is unavailable');
   }
 
+  // * add Bookinginfo and then saved it into the booking model
+  const bookingInfo: Partial<IBooking> = {};
+  bookingInfo.bikeId = bikeId;
+  bookingInfo.userId = user._id;
+  bookingInfo.startTime = startTime;
+  // * start the mongoose session
+  const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    payload.userId = user?._id;
-
-    const data = await rentals.create([payload], { session });
-    // console.log('data:', data);
-
-    if (!data) {
-      throw new AppError(status.BAD_REQUEST, 'Rental created failed!');
-    }
-
-    const updateBike = await Bike.findByIdAndUpdate(
-      payload.bikeId,
-      { isAvailable: false },
-      { new: true, runValidators: true, session },
-    );
-    // console.log('updateBike', updateBike);
-
-    if (!updateBike) {
-      throw new AppError(status.BAD_REQUEST, 'Bike update failed!');
-    }
-
-    await session.commitTransaction();
-    session.endSession();
-
-    return data;
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw new AppError(status.BAD_REQUEST, 'Rental create failed!');
-  }
-};
-
-// * see my rental bike
-const myRentalsService = async (email: JwtPayload) => {
-  const user = await userModel.findOne({ email: email });
-  if (!user) {
-    throw new AppError(status.NOT_FOUND, 'No Data Found');
-  }
-
-  const data = await rentals
-    .find({ userId: user?._id })
-    .select({ createdAt: 0, updatedAt: 0 });
-  if (!data || data.length < 1) {
-    throw new AppError(status.NOT_FOUND, 'No Data Found');
-  }
-
-  return data;
-};
-
-// * return bike services (admin)
-const returnBike = async (bookingId: string) => {
-  // find current rentals
-  const currentRentals = await rentals.findById(bookingId);
-  const bikeId = currentRentals?.bikeId;
-  // console.log('currentRentals, bikeId ', currentRentals, bikeId);
-
-  if (!currentRentals) {
-    throw new AppError(status.NOT_FOUND, 'No Data Found');
-  }
-
-  //   find bike by id
-  const rentalsBike = await Bike.findById(bikeId);
-  // console.log('rentalBike', rentalsBike);
-
-  if (!rentalsBike) {
-    throw new AppError(status.NOT_FOUND, 'No Data Found');
-  }
-
-  const pricePerHour = rentalsBike?.pricePerHour;
-  const startTime = new Date(currentRentals?.startTime as Date);
-
-  //  current time
-  const returnTime = new Date();
-  // hours of rent
-  const differenceTime = returnTime.getTime() - startTime.getTime();
-  const differenceInHours = (differenceTime / (1000 * 60 * 60)).toFixed(2);
-
-  //   total cost
-  const totalCost = (Number(differenceInHours) * Number(pricePerHour)).toFixed(
-    2,
-  );
-
-  const session = await startSession();
-
-  try {
-    session.startTransaction();
-    const updateRental = await rentals
-      .findByIdAndUpdate(
-        bookingId,
-        { returnTime, totalCost, isReturned: true },
-        { new: true, runValidators: true, session },
-      )
-      .select({ createdAt: 0, updatedAt: 0 });
-
-    if (!updateRental) {
-      throw new AppError(status.BAD_REQUEST, 'Rental update failed!');
-    }
-
-    const isAvailableUpdate = await Bike.findByIdAndUpdate(
-      currentRentals?.bikeId,
-      { isAvailable: true },
-      { new: true, runValidators: true, session },
-    );
-
-    if (!isAvailableUpdate) {
+    const rentABike = await Booking.create([bookingInfo], { session });
+    // * if anything happens to create the rent then error will be thrown
+    if (!rentABike.length) {
       throw new AppError(
-        status.BAD_REQUEST,
-        'Bike availability update failed!',
+        httpStatus.BAD_REQUEST,
+        'something went wrong to rent a bike,try again',
+      );
+    }
+
+    // * update the bike isAvailability
+    const bikeInfo = await Bike.findByIdAndUpdate(
+      bikeId,
+      { isAvailable: false },
+      { new: true, session },
+    );
+    if (!bikeInfo) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        'Something went wrong to update bike',
       );
     }
 
     await session.commitTransaction();
-    session.endSession();
-
-    return updateRental;
+    await session.endSession();
+    return rentABike;
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
-    throw new AppError(status.BAD_REQUEST, 'Return rental failed!');
+    await session.endSession();
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'Something went wrong to rent a bike',
+    );
   }
 };
 
-export const rentalsServices = { createRentals, returnBike, myRentalsService };
+// * see my rental bike
+const myRentalsService = async (payload: JwtPayload) => {
+  const { email } = payload;
+  const user = await User.findOne({ email });
+  const userId = user?._id;
+  const result = await Booking.find({ userId });
+
+  return result;
+};
+
+// * return bike services (admin)
+const returnBikeServices = async (bookingId: string) => {
+  // * get the bookingInformation
+  const bookingInformation = await Booking.findById(bookingId);
+  if (!bookingInformation) {
+    throw new AppError(httpStatus.FORBIDDEN, 'Sorry there is no such booking');
+  }
+  // * if the bike is already returned then show it to the client
+  if (bookingInformation.isReturned === true) {
+    throw new AppError(httpStatus.FORBIDDEN, 'The bike is already returned');
+  }
+  // * getting the bikeId from bookingInformation
+  const bikeId = bookingInformation.bikeId;
+  // * getting the bike information
+  const bikeInformation = await Bike.findById(bikeId);
+
+  const startTime = bookingInformation.startTime; // * startTime from booking model
+  const returnTIme = new Date().toISOString(); // * return time when route is getting hit
+
+  const pricePerHourOfABike = bikeInformation?.pricePerHour as number; // * pricePerHour
+
+  let totalHours = 0;
+  // * calculating totalHours
+  if (startTime && returnTIme) {
+    const withoutCeil = new Date(returnTIme).getTime() - startTime.getTime();
+    const withoutCeilInHours = withoutCeil / (1000 * 60 * 60);
+    totalHours = Math.ceil(withoutCeilInHours); // * if someone run the bike for 1.5 hour then make it to the 2 hours that what happens in the real world
+  }
+
+  // * calculating total cost
+  const totalCost = Math.abs(pricePerHourOfABike * totalHours);
+  // * update the booking information
+  const bookingUpdatedInformation: Partial<IBooking> = {};
+  bookingUpdatedInformation.returnTime = new Date(returnTIme);
+  bookingUpdatedInformation.totalCost = totalCost;
+  bookingUpdatedInformation.isReturned = true;
+
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+    // * update the booking info such as return time total cost and isReturned field
+    const updateBooking = await Booking.findByIdAndUpdate(
+      bookingId,
+      bookingUpdatedInformation,
+      { new: true, session },
+    );
+    if (!updateBooking) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        'Something went wrong to update the booking information ',
+      );
+    }
+    // * update the bike isAvailable false to true
+    const updateBike = await Bike.findByIdAndUpdate(
+      bikeId,
+      { isAvailable: true },
+      { new: true, session },
+    );
+    if (!updateBike) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        'Something went wrong to update the bike information',
+      );
+    }
+    await session.commitTransaction();
+    await session.endSession();
+
+    return updateBooking;
+  } catch (error) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw new AppError(httpStatus.FORBIDDEN, 'Something went wrong to update ');
+  }
+};
+
+export const BookingServices = {
+  myRentalsService,
+  rentABikeService,
+  returnBikeServices,
+};

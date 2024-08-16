@@ -1,19 +1,20 @@
-import express from 'express';
-import { validationRequest } from '../../utils/validateRequest';
-import { createUserSignInValidationSchema } from '../users/users.validation';
-import { authController } from './auth.controller';
-import { userLoginValidationSchema } from './auth.validation';
-const route = express.Router();
+import e from 'express';
+import validateRequest from '../../middleware/validateRequest';
+import { UserValidations } from '../users/users.validation';
+import { AuthControllers } from './auth.controller';
+import { AuthValidations } from './auth.validation';
 
-route.post(
+const router = e.Router();
+
+router.post(
   '/signup',
-  validationRequest(createUserSignInValidationSchema),
-  authController.signUpUser,
+  validateRequest(UserValidations.createUserValidationSchema),
+  AuthControllers.signUp,
 );
-route.post(
+router.post(
   '/login',
-  validationRequest(userLoginValidationSchema),
-  authController.loginUser,
+  validateRequest(AuthValidations.loginAuth),
+  AuthControllers.login,
 );
 
-export const authRouter = route;
+export const AuthRoutes = router;

@@ -1,47 +1,110 @@
-import status from 'http-status';
-
+import httpStatus from 'http-status';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import config from '../../config';
+import { AppError } from '../../errors/AppError';
 import catchAsync from '../../utils/catchAsync';
-import successResponse from '../../utils/sendResponse';
-import { rentalsServices } from './rentals.services';
+import sendResponse from '../../utils/sendResponse';
+import { BookingServices } from './rentals.services';
 
-const createRental = catchAsync(async (req, res) => {
-  const body = req.body;
-  const user = req.user;
-  const data = await rentalsServices.createRentals(user?.email, body);
-  // console.log('body, user, data', body, user, data);
+// * rental  a bike controller
+const boookingABike = catchAsync(async (req, res) => {
+  const headers = req.headers.authorization as string;
+  console.log(headers);
+  // * check if headers is present or not
 
-  successResponse(res, {
-    statusCode: status.OK,
-    success: true,
+  if (!headers) {
+    console.log('hed:', headers);
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      'You have no access to this route',
+    );
+  }
+  const authToken = headers.split('Bearer ')[1];
+  // * check if auth token is present or not
+
+  if (!authToken) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      'You have no access to this route',
+    );
+  }
+  // * verify the token
+  const payload = jwt.verify(
+    authToken,
+    config.JWT_SECRET as string,
+  ) as JwtPayload;
+  if (!payload) {
+    throw new AppError(httpStatus.FORBIDDEN, 'Payload is corrupted');
+  }
+
+  const result = await BookingServices.rentABikeService(payload, req.body);
+
+  sendResponse(res, {
     message: 'Rental created successfully',
-    data,
+    statusCode: 200,
+    result,
   });
 });
 
-const getAllRentals = catchAsync(async (req, res) => {
-  const user = req.user;
-  const data = await rentalsServices.myRentalsService(user?.email);
-  // console.log('user, data', user, data);
+const myRentals = catchAsync(async (req, res) => {
+  const headers = req.headers.authorization;
+  if (!headers) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      'You have no access to this route',
+    );
+  }
+  const authToken = headers.split('Bearer ')[1];
+  if (!authToken) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      'You have no access to this route',
+    );
+  }
+  const payload = jwt.verify(
+    authToken,
+    config.JWT_SECRET as string,
+  ) as JwtPayload;
+  if (!payload) {
+    throw new AppError(httpStatus.FORBIDDEN, 'Payload is corrupted');
+  }
 
-  successResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: 'Rentals retrieved successfully',
-    data,
+  const result = await BookingServices.myRentalsService(payload);
+  sendResponse(res, {
+    message: 'Rental retreived successfully',
+    statusCode: 200,
+    result,
   });
 });
 
 const returnBike = catchAsync(async (req, res) => {
+  // const headers = req.headers.authorization;
+  // if (!headers) {
+  //   throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized");
+  // }
+  // const authToken = headers.split("Bearer ")[1];
+  // if (!authToken) {
+  //   throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized");
+  // }
+  // const payload = jwt.verify(
+  //   authToken,
+  //   config.JWT_SECRET as string,
+  // ) as JwtPayload;
+  // if (!payload) {
+  //   throw new AppError(httpStatus.FORBIDDEN, "Payload is corrupted");
+  // }
   const { id } = req.params;
-  const data = await rentalsServices.returnBike(id);
-  // console.log('id, data', id, data);
-
-  successResponse(res, {
-    statusCode: status.OK,
-    success: true,
+  const bookingId = id;
+  const result = await BookingServices.returnBikeServices(bookingId);
+  sendResponse(res, {
+    statusCode: 200,
     message: 'Bike returned successfully',
-    data,
+    result,
   });
 });
 
-export const rentalsController = { createRental, getAllRentals, returnBike };
+export const BookingController = {
+  boookingABike,
+  myRentals,
+  returnBike,
+};

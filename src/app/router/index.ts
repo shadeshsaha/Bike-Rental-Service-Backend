@@ -1,23 +1,23 @@
 import express from 'express';
-import { authRouter } from '../modules/auth/auth.route';
-import { bikeRouter } from '../modules/bike/bike.route';
+import { AuthRoutes } from '../modules/auth/auth.route';
+import { BikeRoutes } from '../modules/bike/bike.route';
 import { rentalsRoute } from '../modules/rentals/rentals.route';
-import { userRouter } from '../modules/users/users.route';
+import { UserRoutes } from '../modules/users/users.route';
 
 const router = express.Router();
 
 const moduleRoute = [
   {
     path: '/auth',
-    route: authRouter,
+    route: AuthRoutes,
   },
   {
     path: '/users',
-    route: userRouter,
+    route: UserRoutes,
   },
   {
     path: '/bikes',
-    route: bikeRouter,
+    route: BikeRoutes,
   },
   {
     path: '/rentals',

@@ -1,36 +1,36 @@
+import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import { AppError } from '../../errors/AppError';
-// import { TUser } from './users.interface';
-import status from 'http-status';
-import { TUser } from './users.interface';
-import { userModel } from './users.model';
+import { IUser } from './users.interface';
+import { User } from './users.model';
 
-const retrieveAllUsers = async (payload: JwtPayload) => {
-  const result = await userModel
-    .find({ email: payload })
-    .select({ password: 0 });
-
-  if (!result || result.length < 1) {
-    throw new AppError(status.NOT_FOUND, 'No Data Found');
-  }
-
-  return result;
-};
-
-const updateProfile = async (email: JwtPayload, payload: Partial<TUser>) => {
-  const result = await userModel
-    .findOneAndUpdate({ email: email }, payload, {
-      new: true,
-      runValidators: true,
-    })
-    .select({ password: 0, createdAt: 0, updatedAt: 0 });
+const seeProfileServices = async (payload: JwtPayload) => {
+  const email = payload?.email;
+  const result = await User.findOne({ email }).select('-password');
   if (!result) {
-    throw new AppError(status.NOT_FOUND, 'No Data Found');
+    throw new AppError(httpStatus.NOT_FOUND, 'No user found');
   }
   return result;
 };
 
-export const userServices = {
-  retrieveAllUsers,
-  updateProfile,
+const updateProfileServices = async (
+  payload: JwtPayload,
+  userData: Partial<IUser>,
+) => {
+  console.log('payload', payload);
+  console.log('userData', userData);
+  const email = payload?.email;
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'No user found');
+  }
+  const result = await User.findOneAndUpdate({ email }, userData, {
+    new: true,
+  }).select('-password');
+  return result;
+};
+
+export const UserServices = {
+  seeProfileServices,
+  updateProfileServices,
 };

@@ -4,15 +4,15 @@ import { ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
 import config from '../config';
 import { AppError } from '../errors/AppError';
-import handleCastError from '../errors/castError';
-import handleDuplicateError from '../errors/duplicateErrorHandler';
+import handleCastError from '../errors/handleCastError';
+import handleDuplicateError from '../errors/handleDuplicateError';
+import handleZodError from '../errors/handleValidationError';
 import {
   handleJsonWebTokenError,
   handleTokenExpiredError,
   notBeforeError,
-} from '../errors/jwtError';
+} from '../errors/handleZodError';
 import mongooseValiDationError from '../errors/mongooseValidation';
-import handleZodError from '../errors/zodErrorHandler';
 import { TErrorMessages } from '../utils';
 
 const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {

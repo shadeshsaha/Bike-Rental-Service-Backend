@@ -1,4 +1,4 @@
-export interface TUserLogin {
+export interface IAuth {
   email: string;
   password: string;
 }

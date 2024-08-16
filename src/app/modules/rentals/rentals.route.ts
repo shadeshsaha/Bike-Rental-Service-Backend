@@ -1,24 +1,22 @@
 import express from 'express';
-import { auth } from '../../utils/authMiddleware';
-import { validationRequest } from '../../utils/validateRequest';
-import { UserRole } from '../users/users.constants';
-import { rentalsController } from './rentals.controller';
-import { createRentalsValidationSchema } from './rentals.validation';
-const route = express.Router();
+import { authMiddleware } from '../../middleware/authMiddleware';
+import validateRequest from '../../middleware/validateRequest';
+import { BookingController } from './rentals.controller';
+import { BookingValidations } from './rentals.validation';
 
-route.post(
+const router = express.Router();
+
+router.post(
   '/',
-  // authMiddleware(UserRole.admin, UserRole.user),
-  validationRequest(createRentalsValidationSchema),
-  rentalsController.createRental,
+  validateRequest(BookingValidations.createRentalBikeValidation),
+  BookingController.boookingABike,
+);
+router.get('/', BookingController.myRentals);
+
+router.put(
+  '/:id/return',
+  authMiddleware('admin'),
+  BookingController.returnBike,
 );
 
-route.get(
-  '/',
-  // authMiddleware(UserRole.user, UserRole.admin),
-  rentalsController.getAllRentals,
-);
-
-route.put('/:id/return', auth(UserRole.admin), rentalsController.returnBike);
-
-export const rentalsRoute = route;
+export const rentalsRoute = router;

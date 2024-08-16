@@ -1,10 +1,10 @@
-export interface TBike {
+export interface IBike {
   name: string;
   description: string;
   pricePerHour: number;
-  isAvailable: boolean;
+  isAvailable?: boolean;
   cc: number;
-  year: string;
+  year: number;
   model: string;
   brand: string;
 }

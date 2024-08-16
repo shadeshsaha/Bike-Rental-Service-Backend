@@ -1,44 +1,82 @@
-import { model, Schema } from 'mongoose';
-import { TBike } from './bike.interface';
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+import httpStatus from 'http-status';
+import { Query, Schema, model } from 'mongoose';
+import { AppError } from '../../errors/AppError';
+import { IBike } from './bike.interface';
 
-const BikeSchema = new Schema<TBike>(
-  {
-    name: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    description: {
-      type: String,
-      maxlength: 300,
-    },
-    pricePerHour: {
-      type: Number,
-      required: true,
-    },
-    isAvailable: {
-      type: Boolean,
-      default: true,
-    },
-    cc: {
-      type: Number,
-      required: true,
-    },
-    year: {
-      type: String,
-    },
-    model: {
-      type: String,
-      required: true,
-    },
-    brand: {
-      type: String,
-      required: true,
-    },
+const bikeSchema = new Schema<IBike>({
+  name: {
+    type: String,
+    required: [true, 'Your name is required'],
   },
-  {
-    timestamps: true,
+  description: {
+    type: String,
+    required: [true, 'Description is required'],
+  },
+  pricePerHour: {
+    type: Number,
+    required: [true, 'price per hour  is required'],
+  },
+  isAvailable: {
+    type: Boolean,
+    default: true,
+  },
+  cc: {
+    type: Number,
+    required: [true, 'Bike CC is required'],
+  },
+  year: {
+    type: Number,
+    required: [true, 'Bike release year is required'],
+  },
+  model: {
+    type: String,
+    required: [true, 'Bike model is required'],
+  },
+  brand: {
+    type: String,
+    required: [true, 'Bike brand is required'],
+  },
+});
+
+bikeSchema.pre<Query<any, any>>(
+  /^findOneAnd(Update|Delete)$/,
+  async function (next) {
+    const query = this as Query<any, any>;
+    const _id = query.getQuery()._id;
+
+    const bike = await Bike.findById(_id).session(null);
+
+    if (!bike) {
+      return next(new AppError(httpStatus.NOT_FOUND, 'No data found'));
+    }
+
+    next();
   },
 );
 
-export const Bike = model<TBike>('Bike', BikeSchema);
+// bikeSchema.pre<Query<any, any>>("findOneAndUpdate", async function(next) {
+//   const { _id } = this.getQuery();
+//
+//   const checkExistOrNot = await Bike.findById(_id);
+//
+//   if (!checkExistOrNot) {
+//     throw new AppError(
+//       httpStatus.NOT_FOUND,
+//       "Sorry there is no such bike to update",
+//     );
+//   }
+//
+//   next();
+// });
+//
+// bikeSchema.pre<Query<any, any>>("findOneAndDelete", async function(next) {
+//   const { _id } = this.getQuery();
+//   const checkExistOrNot = await Bike.findById(_id);
+//   if (!checkExistOrNot) {
+//     throw new AppError(httpStatus.NOT_FOUND, "Sorry there is no such product")
+//   }
+//   next();
+// })
+
+export const Bike = model<IBike>('Bike', bikeSchema);
