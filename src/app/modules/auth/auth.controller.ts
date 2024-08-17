@@ -1,33 +1,54 @@
-import { Request, Response } from 'express';
 import httpStatus from 'http-status';
-import { catchAsync } from '../../utils/catchAsync';
-import successResponse from '../../utils/sendResponse';
-import { authServices } from './auth.services';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import config from '../../config';
+import AppError from '../../errors/AppError';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { User } from '../users/users.model';
+import { AuthServices } from './auth.services';
 
-const signUpUser = catchAsync(async (req, res) => {
-  const body = req.body;
+const createUser = catchAsync(async (req, res) => {
+  const result = await AuthServices.createUserIntoDB(req.body);
 
-  const data = await authServices.signUpUser(body);
-  successResponse(res, {
-    statusCode: httpStatus.CREATED,
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
     success: true,
     message: 'User registered successfully',
-    data,
+    data: result,
   });
 });
 
-const loginUser = catchAsync(async (req: Request, res: Response) => {
-  const body = req.body;
+const loginUser = catchAsync(async (req, res) => {
+  const user = await User.findOne({ email: req?.body?.email });
 
-  const { token, data } = await authServices.loginUser(body);
+  const accessToken = await AuthServices.loginUser(req.body);
 
-  successResponse(res, {
+  const decoded = jwt.verify(
+    // tokenSplit[1],
+    accessToken,
+    config.jwt_access_secret as string,
+  ) as JwtPayload;
+  const { email: decodedEmail } = decoded;
+
+  if (user?.email !== decodedEmail) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Mis Information');
+  }
+
+  const bearerAccessToken = `Bearer ${accessToken}`;
+  res.cookie('accessToken', bearerAccessToken, {
+    secure: config.NODE_ENV === 'production',
+    httpOnly: true,
+  });
+  sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'User logged in successfully',
-    token: token,
-    data,
+    token: bearerAccessToken,
+    data: user,
   });
 });
 
-export const authController = { signUpUser, loginUser };
+export const AuthController = {
+  createUser,
+  loginUser,
+};

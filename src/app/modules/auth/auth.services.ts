@@ -1,47 +1,51 @@
-import bcrypt from 'bcrypt';
-import { userModel } from './../users/users.model';
-import { TUser } from '../users/users.interface';
-import { TUserLogin } from './auth.interface';
-import { AppError } from '../../errors/AppError';
-import jwt from 'jsonwebtoken';
-import status from 'http-status';
+import httpStatus from 'http-status';
 import config from '../../config';
+import AppError from '../../errors/AppError';
+import { TUser } from '../users/users.interface';
+import { User } from '../users/users.model';
+import { TLoginUser } from './auth.interface';
+import { createToken } from './auth.utils';
 
-const signUpUser = async (payload: TUser) => {
-  const result = await userModel.create(payload);
-  return result;
+const createUserIntoDB = async (payload: TUser) => {
+  try {
+    const result = await User.create(payload);
+    return result;
+  } catch (error) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create User');
+  }
 };
 
-const loginUser = async (payload: TUserLogin) => {
-  // check the user is exist ?
-  const userExist = await userModel.findOne({ email: payload.email });
-  if (!userExist) {
-    throw new AppError(status.BAD_REQUEST, 'No Data Found');
+const loginUser = async (payload: TLoginUser) => {
+  // checking if user is exist
+  const user = await User.findOne({ email: payload?.email }).select(
+    '+password',
+  );
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User Not Found');
   }
 
-  const isPasswordMatched = await bcrypt.compare(
-    payload.password,
-    userExist.password,
+  if (user.password !== payload.password) {
+    throw new AppError(httpStatus.NOT_FOUND, "Email or Password doesn't match");
+  }
+
+  // send accessToken
+  const jwtPayload = {
+    email: user.email,
+    role: user.role,
+  };
+  // const bearerToken = `Bearer ${jwtPayload}`
+  const accessToken = createToken(
+    // jwtPayload,
+    jwtPayload,
+    config.jwt_access_secret as string,
+    config.jwt_access_expires_in as string,
   );
 
-  if (!isPasswordMatched) {
-    throw new AppError(status.UNAUTHORIZED, 'Password incorrect!');
-  }
-
-  const tokenPayload = {
-    email: payload.email,
-    role: userExist.role,
-  };
-
-  const token = jwt.sign(tokenPayload, config.jwt_secret as string, {
-    expiresIn: config.expires_in,
-  });
-
-  const user = await userModel
-    .findById(userExist._id)
-    .select({ password: 0, createdAt: 0, updatedAt: 0 });
-
-  return { token, data: user };
+  // return `Bearer ${accessToken}`
+  return accessToken;
 };
 
-export const authServices = { signUpUser, loginUser };
+export const AuthServices = {
+  createUserIntoDB,
+  loginUser,
+};

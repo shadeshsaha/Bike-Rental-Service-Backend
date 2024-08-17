@@ -1,4 +1,4 @@
-export interface TUserLogin {
+export interface TLoginUser {
   email: string;
   password: string;
 }
