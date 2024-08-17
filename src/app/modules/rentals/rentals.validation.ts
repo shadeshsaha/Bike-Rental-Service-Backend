@@ -1,12 +1,6 @@
 import { z } from 'zod';
 
-const createRentalBikeValidation = z.object({
-  body: z.object({
-    bikeId: z.string({ required_error: 'Bike id is required' }),
-    startTime: z.string().datetime(),
-  }),
+export const createRentalsValidationSchema = z.object({
+  bikeId: z.string(),
+  startTime: z.string().optional(),
 });
-
-export const BookingValidations = {
-  createRentalBikeValidation,
-};

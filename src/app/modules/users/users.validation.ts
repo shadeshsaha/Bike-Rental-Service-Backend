@@ -1,27 +1,34 @@
 import { z } from 'zod';
 
-const createUserValidationSchema = z.object({
+const userValidationSchema = z.object({
   body: z.object({
-    name: z.string(),
-    email: z.string(),
-    password: z.string(),
-    phone: z.string(),
-    address: z.string(),
-    role: z.enum(['user', 'admin']).default('user'),
+    name: z.string({
+      invalid_type_error: 'Name must be a string',
+    }),
+    email: z
+      .string({
+        invalid_type_error: 'Email must be a string',
+      })
+      .email({ message: 'Invalid email address' }),
+
+    password: z.string({
+      invalid_type_error: 'Password must be a string',
+    }),
+
+    phone: z.string({
+      invalid_type_error: 'Phone must be a string',
+    }),
+
+    address: z.string({
+      invalid_type_error: 'Address must be a string',
+    }),
+
+    role: z.enum(['admin', 'user'], {
+      invalid_type_error: 'Role must be either "admin" or "user"',
+    }),
   }),
 });
 
-const updateUserValidationSchema = z.object({
-  body: z.object({
-    name: z.string().optional(),
-    email: z.string().optional(),
-    phone: z.string().optional(),
-    address: z.string().optional(),
-    role: z.enum(['user', 'admin']).default('user').optional(),
-  }),
-});
-
-export const UserValidations = {
-  createUserValidationSchema,
-  updateUserValidationSchema,
+export const UserValidation = {
+  userValidationSchema,
 };

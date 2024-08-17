@@ -1,33 +1,39 @@
-import { Schema, model } from 'mongoose';
-import { IBooking } from './rentals.interface';
+import { model, Schema } from 'mongoose';
+import { TRentals } from './rentals.interface';
 
-const bookingSchema = new Schema<IBooking>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'User',
+const rentalsSchema = new Schema<TRentals>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'User',
+    },
+    bikeId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'Bike',
+    },
+    startTime: {
+      type: Date,
+      required: true,
+      default: new Date(),
+    },
+    returnTime: {
+      type: Date,
+      default: null,
+    },
+    totalCost: {
+      type: Number,
+      default: 0,
+    },
+    isReturned: {
+      type: Boolean,
+      default: false,
+    },
   },
-  bikeId: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'Bike',
+  {
+    timestamps: true,
   },
-  startTime: {
-    type: Date,
-    required: true,
-  },
-  returnTime: {
-    type: Date,
-    default: null,
-  },
-  totalCost: {
-    type: Number,
-    default: 0,
-  },
-  isReturned: {
-    type: Boolean,
-    default: false,
-  },
-});
+);
 
-export const Booking = model<IBooking>('Booking', bookingSchema);
+export const rentals = model<TRentals>('Rental', rentalsSchema);

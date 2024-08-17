@@ -1,16 +1,19 @@
-import express from 'express';
-import validateRequest from '../../middleware/validateRequest';
-import { UserController } from './users.controller';
-import { UserValidations } from './users.validation';
+import { Router } from 'express';
+import auth from '../../middleware/auth';
+import { USER_ROLE } from './users.constants';
+import { UserControllers } from './users.controller';
 
-const router = express.Router();
+const router = Router();
 
-router.get('/me', UserController.seeUserProfile);
-
+router.get(
+  '/me',
+  auth(USER_ROLE.admin, USER_ROLE.user),
+  UserControllers.getProfile,
+);
 router.put(
   '/me',
-  validateRequest(UserValidations.updateUserValidationSchema),
-  UserController.updateUserProfile,
+  auth(USER_ROLE.admin, USER_ROLE.user),
+  UserControllers.updateProfile,
 );
 
 export const UserRoutes = router;

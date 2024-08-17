@@ -1,63 +1,44 @@
-/* eslint-disable  @typescript-eslint/no-explicit-any */
-import bcrypt from 'bcrypt';
-import httpStatus from 'http-status';
-import { Schema, UpdateQuery, model } from 'mongoose';
-import { AppError } from '../../errors/AppError';
-import { IUser } from './users.interface';
+import { Schema, model } from 'mongoose';
+import { TUser } from './users.interface';
 
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema<TUser>(
   {
     name: {
       type: String,
-      required: [true, 'User name is required'],
-      unique: true,
+      required: true,
     },
     email: {
       type: String,
-      required: [true, 'User email is required'],
+      required: true,
       unique: true,
     },
     password: {
       type: String,
-      required: [true, 'User password is required'],
+      required: true,
       select: false,
     },
     phone: {
       type: String,
-      required: [true, 'Phone number is required'],
+      required: true,
     },
     address: {
       type: String,
-      required: [true, 'Address is required'],
+      required: true,
     },
     role: {
       type: String,
-      default: 'user',
+      enum: ['admin', 'user'],
     },
   },
   {
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret.password; // Remove the password field
+        return ret;
+      },
+    },
   },
 );
 
-userSchema.pre('save', async function (next) {
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
-
-userSchema.pre('findOneAndUpdate', async function (next) {
-  const value = this.getUpdate() as UpdateQuery<any>;
-
-  if (value) {
-    if (value.password) {
-      throw new AppError(
-        httpStatus.FORBIDDEN,
-        'You can not update the password',
-      );
-    }
-  }
-
-  next();
-});
-
-export const User = model<IUser>('User', userSchema);
+export const User = model<TUser>('User', userSchema);

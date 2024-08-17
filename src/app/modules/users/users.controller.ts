@@ -1,91 +1,31 @@
 import httpStatus from 'http-status';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-import config from '../../config';
-import { AppError } from '../../errors/AppError';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { UserServices } from './users.service';
 
-const seeUserProfile = catchAsync(async (req, res) => {
-  // console.log(req);
-  const headers = req.headers.authorization;
-  console.log('headers: ' + headers);
-  // * check if headers is present or not
-  if (!headers) {
-    throw new AppError(
-      httpStatus.UNAUTHORIZED,
-      'You have no access to this route',
-    );
-  }
-  const authToken = headers.split('Bearer')[1];
-  // * check if authToken is present or not
-
-  if (!authToken) {
-    throw new AppError(
-      httpStatus.UNAUTHORIZED,
-      'You have no access to this route',
-    );
-  }
-
-  // * verify the authtoken
-  const payload = jwt.verify(
-    authToken,
-    config.JWT_SECRET as string,
-  ) as JwtPayload;
-
-  if (!payload) {
-    throw new AppError(httpStatus.FORBIDDEN, 'Payload is corrupted');
-  }
-
-  const result = await UserServices.seeProfileServices(payload);
+const getProfile = catchAsync(async (req, res) => {
+  const result = await UserServices.getProfileFromDB(req.user);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
+    success: true,
     message: 'User profile retrieved successfully',
-    result,
+    data: result,
   });
 });
 
-const updateUserProfile = catchAsync(async (req, res) => {
-  console.log(req.body);
-  const headers = req.headers.authorization;
-  console.log('headers: ' + headers);
-  // * check if headers is present or not
+const updateProfile = catchAsync(async (req, res) => {
+  const result = await UserServices.updateProfileIntoDB(req.user, req.body);
 
-  if (!headers) {
-    throw new AppError(
-      httpStatus.UNAUTHORIZED,
-      'You have no access to this route',
-    );
-  }
-  const authToken = headers.split('Bearer')[1];
-  // * check if auth token is present or not
-
-  if (!authToken) {
-    throw new AppError(
-      httpStatus.UNAUTHORIZED,
-      'You have no access to this route',
-    );
-  }
-  const payload = jwt.verify(
-    authToken,
-    config.JWT_SECRET as string,
-  ) as JwtPayload;
-
-  if (!payload) {
-    throw new AppError(httpStatus.FORBIDDEN, 'Payload is corrupted');
-  }
-
-  console.log(payload, req.body);
-  const result = await UserServices.updateProfileServices(payload, req.body);
   sendResponse(res, {
-    statusCode: 200,
+    statusCode: httpStatus.OK,
+    success: true,
     message: 'Profile updated successfully',
-    result,
+    data: result,
   });
 });
 
-export const UserController = {
-  seeUserProfile,
-  updateUserProfile,
+export const UserControllers = {
+  getProfile,
+  updateProfile,
 };

@@ -1,60 +1,60 @@
-import httpStatus from 'http-status';
-import { AppError } from '../../errors/AppError';
-import catchAsync from '../../utils/catchAsync';
-import sendResponse from '../../utils/sendResponse';
-import { BikeServices } from './bike.services';
-
-// * create a bike controller (admin)
+import status from 'http-status';
+import { catchAsync } from '../../utils/catchAsync';
+import successResponse from '../../utils/sendResponse';
+import { bikeServices } from './bike.services';
 const createBike = catchAsync(async (req, res) => {
-  const result = await BikeServices.createBikeInDatabase(req.body);
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    message: 'Bike added successfully',
-    result,
+  const body = req.body;
+
+  const data = await bikeServices.createBike(body);
+
+  successResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: 'Bike added successfully!',
+    data,
   });
 });
 
-// * get all bike controller
-const getAllBike = catchAsync(async (req, res) => {
-  const result = await BikeServices.getAllBikesFromDatabase();
-  if (!result.length) {
-    throw new AppError(httpStatus.NOT_FOUND, 'No data found');
-  }
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
+const retrieveAllBike = catchAsync(async (req, res) => {
+  const data = await bikeServices.retrieveAllBikes(req.query);
+
+  successResponse(res, {
+    statusCode: status.OK,
+    success: true,
     message: 'Bikes retrieved successfully',
-    result,
+    data,
   });
 });
-// * update a bike controller (admin)
+
 const updateBike = catchAsync(async (req, res) => {
-  const result = await BikeServices.updateBikeFromDatabase(
-    req.params.id,
-    req.body,
-  );
+  const { id } = req.params;
+  const body = req.body;
+  const data = await bikeServices.updateBikes(id, body);
 
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
+  successResponse(res, {
+    statusCode: status.OK,
+    success: true,
     message: 'Bike updated successfully',
-    result,
+    data,
   });
 });
 
-// * delete a bike controller (admin)
 const deleteBike = catchAsync(async (req, res) => {
-  const result = await BikeServices.deleteASingleBikeFromDatabase(
-    req.params.id,
-  );
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
+  const { id } = req.params;
+
+  const data = await bikeServices.deleteBikes(id);
+
+  successResponse(res, {
+    statusCode: status.OK,
+    success: true,
     message: 'Bike deleted successfully',
-    result,
+    data,
   });
 });
 
-export const BikeController = {
+export const bikeControllers = {
   createBike,
-  getAllBike,
+  retrieveAllBike,
   updateBike,
   deleteBike,
 };

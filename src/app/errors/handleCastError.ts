@@ -1,22 +1,24 @@
 import mongoose from 'mongoose';
-import { TErrorMessages, TGenericErrorResponse } from '../interface/error';
+import {
+  TErrorSources,
+  TGenericErrorResponse,
+} from '../interface/errorInterface';
 
 const handleCastError = (
   err: mongoose.Error.CastError,
 ): TGenericErrorResponse => {
-  const errorMessages: TErrorMessages = [
+  const errorSources: TErrorSources = [
     {
-      path: '',
+      path: err.path,
       message: err.message,
     },
   ];
-
   const statusCode = 400;
+
   return {
     statusCode,
-    message: err.message,
-    errorMessages,
-    stack: err.stack,
+    message: 'Validation Error',
+    errorSources,
   };
 };
 

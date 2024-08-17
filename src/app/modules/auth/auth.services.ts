@@ -1,61 +1,47 @@
-import httpStatus from 'http-status';
-import jwt from 'jsonwebtoken';
-import config from '../../config';
+import bcrypt from 'bcrypt';
+import { userModel } from './../users/users.model';
+import { TUser } from '../users/users.interface';
+import { TUserLogin } from './auth.interface';
 import { AppError } from '../../errors/AppError';
-import checkPasswordIsCorrectOrNot from '../../utils/comparePassword';
-import { IUser } from '../users/users.interface';
-import { User } from '../users/users.model';
-import { IAuth } from './auth.interface';
+import jwt from 'jsonwebtoken';
+import status from 'http-status';
+import config from '../../config';
 
-const loginService = async (payload: IAuth) => {
-  const user = await User.findOne({ email: payload.email }).select('+password');
+const signUpUser = async (payload: TUser) => {
+  const result = await userModel.create(payload);
+  return result;
+};
 
-  if (!user) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'No user found ');
+const loginUser = async (payload: TUserLogin) => {
+  // check the user is exist ?
+  const userExist = await userModel.findOne({ email: payload.email });
+  if (!userExist) {
+    throw new AppError(status.BAD_REQUEST, 'No Data Found');
   }
-  // * checking password is correct or not
-  const check = await checkPasswordIsCorrectOrNot(
-    payload?.password,
-    user?.password,
+
+  const isPasswordMatched = await bcrypt.compare(
+    payload.password,
+    userExist.password,
   );
-  // * checking password is correct or not
-  if (check === false) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Your password is wrong');
+
+  if (!isPasswordMatched) {
+    throw new AppError(status.UNAUTHORIZED, 'Password incorrect!');
   }
-  // * if everything is ok then create a jwtpayload
-  const jwtPayload = {
-    email: user.email,
-    role: user.role,
+
+  const tokenPayload = {
+    email: payload.email,
+    role: userExist.role,
   };
 
-  const userObj: Partial<IUser> = user.toObject();
-  delete userObj['password'];
-
-  // * create a token
-  const token = jwt.sign(jwtPayload, config.JWT_SECRET as string, {
-    expiresIn: config.JWT_EXPIRES,
+  const token = jwt.sign(tokenPayload, config.jwt_secret as string, {
+    expiresIn: config.expires_in,
   });
-  // * return the user without password and jwt token
-  return {
-    userObj,
-    token,
-  };
+
+  const user = await userModel
+    .findById(userExist._id)
+    .select({ password: 0, createdAt: 0, updatedAt: 0 });
+
+  return { token, data: user };
 };
 
-const signUpAUserService = async (payload: IUser) => {
-  const user = new User(payload);
-  await user.save();
-
-  // * copy the user in userObj and then delete the password
-  const userObj: Partial<IUser> = user.toObject();
-  // delete userObj['password']
-  delete userObj.password;
-
-  // * return the user without password
-  return userObj;
-};
-
-export const AuthServices = {
-  loginService,
-  signUpAUserService,
-};
+export const authServices = { signUpUser, loginUser };

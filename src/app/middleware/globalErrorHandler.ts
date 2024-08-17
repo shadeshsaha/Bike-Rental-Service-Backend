@@ -1,104 +1,98 @@
-// eslint-disable-next-line no-unused-vars
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ErrorRequestHandler } from 'express';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import config from '../config';
-import { AppError } from '../errors/AppError';
+import AppError from '../errors/AppError';
 import handleCastError from '../errors/handleCastError';
 import handleDuplicateError from '../errors/handleDuplicateError';
-import handleZodError from '../errors/handleValidationError';
-import {
-  handleJsonWebTokenError,
-  handleTokenExpiredError,
-  notBeforeError,
-} from '../errors/handleZodError';
-import mongooseValiDationError from '../errors/mongooseValidation';
-import { TErrorMessages } from '../utils';
+import handleValidationError from '../errors/handleValidationError';
+import handleZodError from '../errors/handleZodError';
+import { TErrorSources } from '../interface/errorInterface';
 
-const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
+const globalErrorHandler: ErrorRequestHandler = (
+  err: any,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  // setting default values
   let statusCode = 500;
-  let message;
-  try {
-    message = JSON.parse(err.message);
-  } catch {
-    message = err.message || 'Something went wrong';
-  }
-  let errorMessages: TErrorMessages = [
+  let message = 'Something went wrong!';
+
+  let errorSources: TErrorSources = [
     {
       path: '',
-      message: 'Something went wrong',
+      message: 'There is an error',
     },
   ];
-  // INFO: Duplicate error
-
-  // HACK:
 
   if (err instanceof ZodError) {
-    // ^ handle zod error
-    const getTheErrorData = handleZodError(err);
-    message = getTheErrorData.message;
-    statusCode = getTheErrorData.statusCode;
-    errorMessages = getTheErrorData.errorMessages;
-  } else if (err?.errorResponse?.code === 11000) {
-    // ^ handle duplicate error
-    const getTheErrorData = handleDuplicateError(err);
-    message = getTheErrorData.message;
-    statusCode = getTheErrorData.statusCode;
-    errorMessages = getTheErrorData.errorMessages;
+    const simplifiedZodError = handleZodError(err);
+
+    statusCode = simplifiedZodError?.statusCode;
+    message = simplifiedZodError?.message;
+    errorSources = simplifiedZodError?.errorSources;
   } else if (err?.name === 'ValidationError') {
-    // ^ handle mongoose validation error
-    const getTheErrorData = mongooseValiDationError(err);
-    message = getTheErrorData.message;
-    statusCode = getTheErrorData.statusCode;
-    errorMessages = getTheErrorData.errorMessages;
+    const simplifiedMongooseError = handleValidationError(err);
+
+    statusCode = simplifiedMongooseError?.statusCode;
+    message = simplifiedMongooseError?.message;
+    errorSources = simplifiedMongooseError?.errorSources;
   } else if (err?.name === 'CastError') {
-    // ^ handle cast error
-    const getTheErrorData = handleCastError(err);
-    message = getTheErrorData.message;
-    statusCode = getTheErrorData.statusCode;
-    errorMessages = getTheErrorData.errorMessages;
-  } else if (err?.name === 'TokenExpiredError') {
-    // ^ handle jwt token expiration error
-    const getTheErrorData = handleTokenExpiredError(err);
-    statusCode = getTheErrorData.statusCode;
-    message = getTheErrorData.message;
-    errorMessages = getTheErrorData.errorMessages;
-  } else if (err?.name === 'JsonWebTokenError') {
-    // ^ handle jwt jsonwebtoken error
-    const getTheErrorData = handleJsonWebTokenError(err);
-    statusCode = getTheErrorData.statusCode;
-    message = getTheErrorData.message;
-    errorMessages = getTheErrorData.errorMessages;
-  } else if (err?.name === 'NotBeforeError') {
-    // ^ handle jwt notbeforeerror
-    const getTheErrorData = notBeforeError(err);
-    statusCode = getTheErrorData.statusCode;
-    message = getTheErrorData.message;
-    errorMessages = getTheErrorData.errorMessages;
+    const simplifiedMongooseError = handleCastError(err);
+
+    statusCode = simplifiedMongooseError?.statusCode;
+    message = simplifiedMongooseError?.message;
+    errorSources = simplifiedMongooseError?.errorSources;
+  } else if (err?.code === 11000) {
+    const simplifiedMongooseError = handleDuplicateError(err);
+
+    statusCode = simplifiedMongooseError?.statusCode;
+    message = simplifiedMongooseError?.message;
+    errorSources = simplifiedMongooseError?.errorSources;
   } else if (err instanceof AppError) {
     statusCode = err.statusCode;
-    message = err.message;
-    errorMessages = [
+    message = err?.message;
+    errorSources = [
       {
         path: '',
         message: err?.message,
       },
     ];
   } else if (err instanceof Error) {
-    message = err.message;
-    errorMessages = [
+    // statusCode = err.statusCode; //Property 'statusCode' does not exist on type 'Error'.ts(2339)
+    message = err?.message;
+    errorSources = [
       {
         path: '',
         message: err?.message,
       },
     ];
   }
-  res.status(statusCode).json({
+
+  // final return
+  return res.status(statusCode).json({
     success: false,
     message,
-    errorMessages,
+    errorSources,
+    // err,
     stack: config.NODE_ENV === 'development' ? err?.stack : null,
   });
 };
 
 export default globalErrorHandler;
+
+/***
+ * PATTERN
+ *
+ * success
+ * message
+ * errorSources: [
+ * path: ""
+ * message: ""
+ * ]
+ * stack
+ */

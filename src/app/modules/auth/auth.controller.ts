@@ -1,31 +1,33 @@
+import { Request, Response } from 'express';
 import httpStatus from 'http-status';
-import catchAsync from '../../utils/catchAsync';
-import sendResponse from '../../utils/sendResponse';
-import { AuthServices } from './auth.services';
+import { catchAsync } from '../../utils/catchAsync';
+import successResponse from '../../utils/sendResponse';
+import { authServices } from './auth.services';
 
-// * login controllers
-const login = catchAsync(async (req, res) => {
-  const result = await AuthServices.loginService(req.body);
-  res.status(200).json({
-    success: true,
-    statusCode: 200,
-    message: 'User logged in successfully',
-    token: result?.token,
-    data: result?.userObj,
-  });
-});
+const signUpUser = catchAsync(async (req, res) => {
+  const body = req.body;
 
-// * signup controllers
-const signUp = catchAsync(async (req, res) => {
-  const result = await AuthServices.signUpAUserService(req.body);
-  sendResponse(res, {
+  const data = await authServices.signUpUser(body);
+  successResponse(res, {
     statusCode: httpStatus.CREATED,
+    success: true,
     message: 'User registered successfully',
-    result,
+    data,
   });
 });
 
-export const AuthControllers = {
-  login,
-  signUp,
-};
+const loginUser = catchAsync(async (req: Request, res: Response) => {
+  const body = req.body;
+
+  const { token, data } = await authServices.loginUser(body);
+
+  successResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User logged in successfully',
+    token: token,
+    data,
+  });
+});
+
+export const authController = { signUpUser, loginUser };
