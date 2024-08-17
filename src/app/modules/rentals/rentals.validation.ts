@@ -1,6 +1,16 @@
 import { z } from 'zod';
 
-export const createRentalsValidationSchema = z.object({
-  bikeId: z.string(),
-  startTime: z.string().optional(),
+const rentalValidationSchema = z.object({
+  body: z.object({
+    userId: z.string({ required_error: 'User Reference must be provided' }),
+    bikeId: z.string({ required_error: 'Bike Reference must be provided' }),
+    startTime: z.date(),
+    returnTime: z.date().nullable().default(null),
+    totalCost: z.number().default(0),
+    isReturned: z.boolean().default(false),
+  }),
 });
+
+export const RentalValidation = {
+  rentalValidationSchema,
+};

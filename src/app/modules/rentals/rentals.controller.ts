@@ -1,43 +1,51 @@
-import status from 'http-status';
-import { catchAsync } from '../../utils/catchAsync';
-import successResponse from '../../utils/sendResponse';
-import { rentalsServices } from './rentals.services';
+import httpStatus from 'http-status';
+import { JwtPayload } from 'jsonwebtoken';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { RentalsServices } from './rentals.services';
 
 const createRental = catchAsync(async (req, res) => {
-  const body = req.body;
-  const user = req.user;
-  const data = await rentalsServices.createRentals(user?.email, body);
-  successResponse(res, {
-    statusCode: status.OK,
+  const payload = {
+    rentalInformation: req.body,
+    authUserInformation: req.user,
+  };
+  const result = await RentalsServices.createRentalIntoDB(payload);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
     success: true,
     message: 'Rental created successfully',
-    data,
+    data: result,
   });
 });
 
-const getAllRentals = catchAsync(async (req, res) => {
-  const user = req.user;
-  const data = await rentalsServices.retrieveRentals(user?.email);
+const getAllRentalsForUser = catchAsync(async (req, res) => {
+  const result = await RentalsServices.getAllRentalsForUserFromDB(
+    req.user as JwtPayload,
+  );
 
-  successResponse(res, {
-    statusCode: status.OK,
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
     success: true,
     message: 'Rentals retrieved successfully',
-    data,
+    data: result,
   });
 });
 
 const returnBike = catchAsync(async (req, res) => {
   const { id } = req.params;
+  const result = await RentalsServices.returnBikeIntoDB(id);
 
-  const data = await rentalsServices.returnBike(id);
-
-  successResponse(res, {
-    statusCode: status.OK,
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
     success: true,
     message: 'Bike returned successfully',
-    data,
+    data: result,
   });
 });
 
-export const rentalsController = { createRental, getAllRentals, returnBike };
+export const RentalsController = {
+  createRental,
+  returnBike,
+  getAllRentalsForUser,
+};

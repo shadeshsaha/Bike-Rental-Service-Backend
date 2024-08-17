@@ -1,24 +1,12 @@
-import express from 'express';
-import { rentalsController } from './rentals.controller';
-import { validationRequest } from '../../utils/validate.request';
-import { createRentalsValidationSchema } from './rentals.validation';
-import { auth } from '../../utils/authMiddleware';
-import { UserRole } from '../users/users.constants';
-const route = express.Router();
+import { Router } from 'express';
+import auth from '../../middleware/auth';
+import { USER_ROLE } from '../users/users.constants';
+import { RentalsController } from './rentals.controller';
 
-route.post(
-  '/',
-  auth(UserRole.admin, UserRole.user),
-  validationRequest(createRentalsValidationSchema),
-  rentalsController.createRental,
-);
+const router = Router();
 
-route.get(
-  '/',
-  auth(UserRole.user, UserRole.admin),
-  rentalsController.getAllRentals,
-);
+router.post('/', auth(USER_ROLE.user), RentalsController.createRental);
+router.get('/', auth(USER_ROLE.user), RentalsController.getAllRentalsForUser);
+router.put('/:id/return', auth(USER_ROLE.admin), RentalsController.returnBike);
 
-route.put('/:id/return', auth(UserRole.admin), rentalsController.returnBike);
-
-export const rentalsRoute = route;
+export const rentalsRoute = router;

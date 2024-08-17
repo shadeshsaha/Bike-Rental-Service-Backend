@@ -36,4 +36,4 @@ const rentalsSchema = new Schema<TRentals>(
   },
 );
 
-export const rentals = model<TRentals>('Rental', rentalsSchema);
+export const Rentals = model<TRentals>('Rental', rentalsSchema);
