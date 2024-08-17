@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 const userValidationSchema = z.object({
   body: z.object({
@@ -27,8 +27,8 @@ const userValidationSchema = z.object({
       invalid_type_error: 'Role must be either "admin" or "user"',
     }),
   }),
-});
+})
 
 export const UserValidation = {
   userValidationSchema,
-};
+}

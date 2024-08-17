@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import { JwtPayload } from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
 import { Bike } from '../bike/bike.model';
-import { User } from '../users/users.model';
-import { Rentals } from './rentals.model';
+import { User } from '../user/user.model';
+import { Booking } from './booking.model';
 
 const createRentalIntoDB = async (payload: {
   authUserInformation: any;
@@ -61,7 +60,7 @@ const createRentalIntoDB = async (payload: {
     await session.commitTransaction();
     await session.endSession();
 
-    const result = await Rentals.create(newBookingInformation);
+    const result = await Booking.create(newBookingInformation);
     return result;
   } catch (error) {
     await session.abortTransaction();
@@ -78,7 +77,7 @@ const getAllRentalsForUserFromDB = async (requestHeader: JwtPayload) => {
     const { email } = requestHeader;
     const userInfo = await User.findOne({ email: email });
     const id = userInfo?.id;
-    const result = await Rentals.find({ userId: id });
+    const result = await Booking.find({ userId: id });
     return result;
   } catch (error) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Rental retrieved failed');
@@ -89,7 +88,7 @@ const returnBikeIntoDB = async (id: string) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const rentInfo = await Rentals.findById(id).populate('bikeId');
+    const rentInfo = await Booking.findById(id).populate('bikeId');
 
     if (!rentInfo) {
       throw new AppError(httpStatus.BAD_REQUEST, 'Rental not found');
@@ -107,7 +106,9 @@ const returnBikeIntoDB = async (id: string) => {
     const rentDurationInHours = Math.ceil(
       (currentTime - (rentInfo.startTime as any)) / (1000 * 60 * 60),
     );
-    const costPerHour = rentInfo.bikeId.pricePerHour;
+
+    console.log('rentInfo: ', rentInfo);
+    const costPerHour = rentInfo?.bikeId?.pricePerHour;
     const totalCost = rentDurationInHours * costPerHour; // Calculated based on rental duration
 
     // Update rental record
@@ -143,7 +144,7 @@ const returnBikeIntoDB = async (id: string) => {
   }
 };
 
-export const RentalsServices = {
+export const BookingServices = {
   createRentalIntoDB,
   returnBikeIntoDB,
   getAllRentalsForUserFromDB,

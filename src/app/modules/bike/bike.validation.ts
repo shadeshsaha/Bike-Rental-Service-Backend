@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 const bikeValidationSchema = z.object({
   body: z.object({
@@ -39,7 +39,7 @@ const bikeValidationSchema = z.object({
       invalid_type_error: 'Brand must be a string',
     }),
   }),
-});
+})
 
 const updateBikeValidationSchema = z.object({
   body: z.object({
@@ -91,9 +91,9 @@ const updateBikeValidationSchema = z.object({
       })
       .optional(),
   }),
-});
+})
 
 export const BikeValidation = {
   bikeValidationSchema,
   updateBikeValidationSchema,
-};
+}

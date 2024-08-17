@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 const loginValidationSchema = z.object({
   body: z.object({
@@ -7,7 +7,7 @@ const loginValidationSchema = z.object({
       .email({ message: 'Invalid email Format' }),
     password: z.string({ required_error: 'Password is required' }),
   }),
-});
+})
 
 const accessTokenValidationSchema = z.object({
   cookies: z.object({
@@ -15,9 +15,9 @@ const accessTokenValidationSchema = z.object({
       required_error: 'Access Token Is Required',
     }),
   }),
-});
+})
 
 export const AuthValidation = {
   loginValidationSchema,
   accessTokenValidationSchema,
-};
+}

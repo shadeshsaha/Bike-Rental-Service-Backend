@@ -1,5 +1,4 @@
 node_modules
 .env
 .vercel
-README.md
-README copy.md
+API-Instruction-On-Postman.md
