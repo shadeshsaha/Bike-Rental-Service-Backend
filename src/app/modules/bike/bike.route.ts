@@ -1,30 +1,26 @@
-import express from 'express';
-import { bikeControllers } from './bike.controller';
-import { validationRequest } from '../../utils/validate.request';
-import {
-  createBikeValidationSchema,
-  updateBikeValidationSchema,
-} from './bike.validation';
-import { auth } from '../../utils/authMiddleware';
-import { UserRole } from '../users/users.constants';
-const route = express.Router();
+import { Router } from 'express';
+import auth from '../../middleware/auth';
+import validateRequest from '../../middleware/validateRequest';
+import { USER_ROLE } from '../users/users.constants';
+import { BikeControllers } from './bike.controller';
+import { BikeValidation } from './bike.validation';
 
-route.post(
+const router = Router();
+
+router.get('/', BikeControllers.getAllBike);
+router.post(
   '/',
-  auth(UserRole.admin),
-  validationRequest(createBikeValidationSchema),
-  bikeControllers.createBike,
+  auth(USER_ROLE.admin),
+  validateRequest(BikeValidation.bikeValidationSchema),
+  BikeControllers.createBike,
 );
 
-route.get('/', bikeControllers.retrieveAllBike);
-
-route.put(
+router.put(
   '/:id',
-  auth(UserRole.admin),
-  validationRequest(updateBikeValidationSchema),
-  bikeControllers.updateBike,
+  auth(USER_ROLE.admin),
+  validateRequest(BikeValidation.updateBikeValidationSchema),
+  BikeControllers.updateBike,
 );
+router.delete('/:id', auth(USER_ROLE.admin), BikeControllers.deleteBike);
 
-route.delete('/:id', auth(UserRole.admin), bikeControllers.deleteBike);
-
-export const bikeRouter = route;
+export const BikeRoutes = router;

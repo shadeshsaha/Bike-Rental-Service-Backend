@@ -2,9 +2,9 @@ export interface TBike {
   name: string;
   description: string;
   pricePerHour: number;
-  isAvailable: boolean;
+  isAvailable?: boolean; // optional, defaults to true if not provided
   cc: number;
-  year: string;
+  year: number;
   model: string;
   brand: string;
 }
